@@ -29,8 +29,8 @@ import static org.mockito.Mockito.*;
 class PriceServiceUnitTest {
 
     private static final String SYMBOL = "Some symbol";
-    private static final BigDecimal LOW_PRICE = new BigDecimal("1.00");
-    private static final BigDecimal HIGH_PRICE = new BigDecimal("2.00");
+    private static final BigDecimal LOW_PRICE = BigDecimal.ONE;
+    private static final BigDecimal HIGH_PRICE = BigDecimal.TWO;
     private static final BigDecimal PRICE = LOW_PRICE;
     private static final Instant FROM = Instant.parse("2026-01-01T00:00:00Z");
     private static final Instant TO = Instant.parse("2026-01-01T12:00:00Z");
