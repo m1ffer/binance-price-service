@@ -1,5 +1,4 @@
 target/
 .idea/
-.env
+.env*
 !.env.example
-TASK.md

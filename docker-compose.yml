@@ -2,15 +2,13 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${POSTGRES_PORT}:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-prices_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-prices_db}"]
       interval: 3s
       timeout: 3s
       retries: 5
@@ -18,12 +16,17 @@ services:
   app:
     build: .
     ports:
-      - "8080:8080"
+      - "${APPLICATION_PORT:-8080}:8080"
     environment:
-      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      BINANCE_SYMBOL: ${BINANCE_SYMBOL}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-prices_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      APP_LOG_LEVEL: ${APP_LOG_LEVEL:-INFO}
+      BINANCE_SYMBOL: ${BINANCE_SYMBOL:-BNBUSDT}
+      BINANCE_POLL_INTERVAL: ${BINANCE_POLL_INTERVAL:-PT30S}
+      BINANCE_BASE_URL: ${BINANCE_BASE_URL:-https://api.binance.com}
     depends_on:
       db:
         condition: service_healthy
