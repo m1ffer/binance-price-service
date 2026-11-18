@@ -13,7 +13,7 @@
 
     <groupId>io.github.m1ffer</groupId>
     <artifactId>binance-price-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>binance-price-service</name>
     <description>Spring Boot service that fetches BNBUSDT average price from Binance on schedule, stores it in PostgreSQL and exposes it via REST API</description>
 

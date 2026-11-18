@@ -19,13 +19,14 @@ public interface PriceRepository extends JpaRepository<Price, Long> {
     Page<Price> findAllBySymbolAndFetchedAtBetweenOrderByFetchedAtDesc(
             String symbol, Instant from, Instant to, Pageable page);
 
-    @Query("""
+    @Query(value = """
            SELECT AVG(p.price)
-           FROM Price p
+           FROM prices p
            WHERE p.symbol = :symbol
-             AND p.fetchedAt >= :from
-             AND p.fetchedAt <= :to
-           """)
+             AND p.fetched_at >= :from
+             AND p.fetched_at <= :to
+           """,
+            nativeQuery = true)
     Optional<BigDecimal> findAveragePrice(
             @Param("symbol") String symbol,
             @Param("from") Instant from,
