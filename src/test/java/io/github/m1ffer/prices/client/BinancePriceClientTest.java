@@ -20,7 +20,7 @@ import java.time.ZoneOffset;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.*;
 
-class BinancePriceClientTest {
+class   BinancePriceClientTest {
 
     private static final String SYMBOL = "Some symbol";
     private static final BigDecimal PRICE = BigDecimal.ONE;

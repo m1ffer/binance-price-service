@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record PriceResponse(String symbol, BigDecimal price, Instant fetchedAt) {
-    public static PriceResponse from(Price price) {
+    public static PriceResponse fromPrice(Price price) {
         return new PriceResponse(price.getSymbol(), price.getPrice(), price.getFetchedAt());
     }
 }

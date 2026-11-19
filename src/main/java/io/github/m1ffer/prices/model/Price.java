@@ -6,12 +6,13 @@ import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.Hibernate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Objects;
+import java.time.temporal.TemporalUnit;
 
 @Entity
 @Table(
@@ -26,6 +27,8 @@ public class Price {
     public static final int SYMBOL_MAX_LENGTH = 20;
     public static final int PRICE_PRECISION = 18;
     public static final int PRICE_SCALE = 8;
+    public static final TemporalUnit TIMESTAMP_PRECISION = ChronoUnit.MICROS;
+    public static final Duration HALF_PRECISION = TIMESTAMP_PRECISION.getDuration().dividedBy(2);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,37 +47,18 @@ public class Price {
     private Instant fetchedAt;
 
     public Price(String symbol, BigDecimal price, Instant fetchedAt) {
-        Objects.requireNonNull(symbol, "symbol must not be null");
-        if (symbol.isBlank()) {
-            throw new IllegalArgumentException("symbol must not be blank");
-        }
-        if (symbol.length() > SYMBOL_MAX_LENGTH) {
-            throw new IllegalArgumentException(
-                    "symbol length must not exceed %d characters".formatted(SYMBOL_MAX_LENGTH));
-        }
-        Objects.requireNonNull(price, "price must not be null");
-        if (price.signum() <= 0) {
-            throw new IllegalArgumentException("price must be positive");
-        }
-        Objects.requireNonNull(fetchedAt, "fetchedAt must not be null");
         this.symbol = symbol;
-        this.price = price;
-        //публичный API сервиса рассчитан на точность до секунд
-        this.fetchedAt = fetchedAt.truncatedTo(ChronoUnit.SECONDS);
+        this.price = roundPrice(price);
+        this.fetchedAt = roundFetchedAt(fetchedAt);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == this)
-            return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o))
-            return false;
-        Price other = (Price) o;
-        return getId() != null && Objects.equals(getId(), other.getId());
+    //TODO подумать над корректностью этих проверок
+    private static BigDecimal roundPrice(BigDecimal price) {
+        return price.setScale(PRICE_SCALE, RoundingMode.HALF_UP);
     }
 
-    @Override
-    public int hashCode() {
-        return Hibernate.getClass(this).hashCode();
+    private static Instant roundFetchedAt(Instant fetchedAt) {
+        return fetchedAt.plus(HALF_PRECISION)
+                .truncatedTo(TIMESTAMP_PRECISION);
     }
 }

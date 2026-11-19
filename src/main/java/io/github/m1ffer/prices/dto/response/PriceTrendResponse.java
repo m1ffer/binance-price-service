@@ -4,11 +4,9 @@ import java.time.Instant;
 
 public record PriceTrendResponse(
         String symbol,
-        Instant startDate,
-        Instant endDate,
-        Trend trend
-) {
-    public enum Trend {
-        UPWARD, DOWNWARD, FLAT
-    }
-}
+        Instant from,
+        Instant to,
+        String algorithm,
+        String trend,
+        PriceTrendDetails details
+) {}

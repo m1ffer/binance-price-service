@@ -1,49 +1,88 @@
 package io.github.m1ffer.prices.controller;
 
 import io.github.m1ffer.prices.dto.request.DateTimeRangeRequest;
-import io.github.m1ffer.prices.dto.request.PaginationRequest;
-import io.github.m1ffer.prices.dto.response.AveragePriceResponse;
-import io.github.m1ffer.prices.dto.response.PricePageResponse;
-import io.github.m1ffer.prices.dto.response.PriceResponse;
-import io.github.m1ffer.prices.dto.response.PriceTrendResponse;
+import io.github.m1ffer.prices.dto.request.SymbolRequest;
+import io.github.m1ffer.prices.dto.response.*;
 import io.github.m1ffer.prices.service.PriceService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/prices")
 @RequiredArgsConstructor
-public class PriceController implements PriceOpenApi {
+public class PriceController {
+    public static final String DEFAULT_PAGE_SIZE = "20";
+    public static final int MAX_PAGE_SIZE = 100;
+    public static final String DEFAULT_SORT_DIRECTION = "DESC";
+
     private final PriceService priceService;
 
-    @GetMapping("/latest")
-    @Override
-    public PriceResponse getLatestPrice() {
-        return priceService.findLatestPrice();
+    @GetMapping("/symbols")
+    public List<String> getAllSymbols() {
+        return priceService.getAllSymbols();
     }
 
-    @GetMapping("/average")
-    @Override
-    public AveragePriceResponse getAveragePrice(@Valid DateTimeRangeRequest range) {
-        return priceService.calculateAveragePrice(range.from(), range.to());
+    @GetMapping("/latest")
+    public ListPriceResponse getLatestPrice(
+            @RequestParam(required = false)
+            List<@Valid SymbolRequest> symbols
+    ) {
+        List<String> symbolsList = symbols == null ? null : symbols.stream()
+                        .map(SymbolRequest::symbol)
+                        .toList();
+        return priceService.getLatestPrice(symbolsList);
     }
 
     @GetMapping
-    @Override
     public PricePageResponse getPrices(
+            @Valid SymbolRequest symbolRequest,
             @Valid DateTimeRangeRequest range,
-            @Valid PaginationRequest pageRequest
+            @RequestParam(defaultValue = DEFAULT_PAGE_SIZE)
+            @Positive
+            @Max(MAX_PAGE_SIZE)
+            Integer size,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = DEFAULT_SORT_DIRECTION) Sort.Direction direction
     ) {
-        return priceService.findPrices(
-                range.from(), range.to(), pageRequest.page(), pageRequest.size());
+        return priceService.getPage(
+                symbolRequest.symbol(),
+                range.from(),
+                range.to(),
+                size,
+                cursor,
+                direction
+        );
+    }
+
+    @GetMapping("/statistics")
+    public StatisticsPriceResponse getStatistics(
+            @Valid SymbolRequest symbolRequest,
+            @Valid DateTimeRangeRequest range
+    ) {
+        return priceService.getStatistics(
+                symbolRequest.symbol(),
+                range.from(),
+                range.to()
+        );
     }
 
     @GetMapping("/trend")
-    @Override
-    public PriceTrendResponse getPriceTrend(@Valid DateTimeRangeRequest range) {
-        return priceService.calculatePriceTrend(range.from(), range.to());
+    public PriceTrendResponse getPriceTrend(
+            @Valid SymbolRequest symbolRequest,
+            @Valid DateTimeRangeRequest range,
+            @RequestParam(required = false) String algorithm
+    ) {
+        return priceService.getTrend(
+                symbolRequest.symbol(),
+                range.from(),
+                range.to(),
+                algorithm
+        );
     }
 }
